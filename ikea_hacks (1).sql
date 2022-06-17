@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 17, 2022 at 05:16 AM
+-- Generation Time: Jun 17, 2022 at 06:57 AM
 -- Server version: 10.4.21-MariaDB
 -- PHP Version: 8.0.12
 
@@ -27,23 +27,24 @@ DELIMITER $$
 --
 -- Procedures
 --
-CREATE DEFINER=`root`@`localhost` PROCEDURE `søg efter contributor posts med contributor_ID` (IN `XX` INT(11))  SELECT * 
+DROP PROCEDURE IF EXISTS `1 Vis over- og underkategorier`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `1 Vis over- og underkategorier` ()  SELECT category.category_name, subcategory.subcategory_name
+FROM category
+INNER JOIN subcategory ON category.subcategory_ID = subcategory.subcategory_ID$$
+
+DROP PROCEDURE IF EXISTS `2 Vis synlige Overkategorier og antal underkategorier`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `2 Vis synlige Overkategorier og antal underkategorier` ()  SELECT category.category_name, subcategory.subcategory_name, COUNT(subcategory.subcategory_ID) AS count_of_subcategory
 FROM content
-	INNER JOIN contributors 
-        	ON content.contributor_ID = contributors.contributor_ID
-WHERE content.contributor_ID = XX$$
+	INNER JOIN category 
+		ON content.category_ID = category.category_ID
+	INNER JOIN subcategory 
+		ON category.subcategory_ID = subcategory.subcategory_ID
+WHERE content.published = 1
+GROUP BY category.category_name
+ORDER BY count_of_subcategory$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `søg efter contributors med contributor_ID` (IN `XX` INT(11))  SELECT *
-FROM contributors
-WHERE contributors.contributor_ID = XX$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `søg efter indlæg med product_name` (IN `XX` VARCHAR(20))  SELECT *
-FROM content
-	INNER JOIN product
-		ON content.product_ID = product.product_ID
-WHERE product_name = XX$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `underkategorier og antal post` ()  SELECT subcategory.subcategory_name, COUNT(subcategory.subcategory_ID) AS count_of_subcategory
+DROP PROCEDURE IF EXISTS `3 Vis underkatgorier og antallet af indlæg der er registreret`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `3 Vis underkatgorier og antallet af indlæg der er registreret` ()  SELECT subcategory.subcategory_name, COUNT(subcategory.subcategory_ID) AS count_of_subcategory
 FROM content
 	INNER JOIN category 
 		ON content.category_ID = category.category_ID
@@ -54,19 +55,24 @@ AND subcategory.subcategory_ID = category.subcategory_ID
 GROUP BY category.category_name
 ORDER BY count_of_subcategory$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `Vis over- og underkategorier` ()  SELECT category.category_name, subcategory.subcategory_name
-FROM category
-INNER JOIN subcategory ON category.subcategory_ID = subcategory.subcategory_ID$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `Vis udgivede over- og underkategorier med antal underkategorier` ()  SELECT category.category_name, subcategory.subcategory_name, COUNT(subcategory.subcategory_ID) AS count_of_subcategory
+DROP PROCEDURE IF EXISTS `4 Søg efter indlæg skrevet om varenavn`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `4 Søg efter indlæg skrevet om varenavn` (IN `XX` VARCHAR(20))  SELECT *
 FROM content
-	INNER JOIN category 
-		ON content.category_ID = category.category_ID
-	INNER JOIN subcategory 
-		ON category.subcategory_ID = subcategory.subcategory_ID
-WHERE content.published = 1
-GROUP BY category.category_name
-ORDER BY count_of_subcategory$$
+	INNER JOIN product
+		ON content.product_ID = product.product_ID
+WHERE product_name = XX$$
+
+DROP PROCEDURE IF EXISTS `5 Vis information om contributors`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `5 Vis information om contributors` (IN `XX` INT(11))  SELECT *
+FROM contributors
+WHERE contributors.contributor_ID = XX$$
+
+DROP PROCEDURE IF EXISTS `6 Vis information om contributors indlæg`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `6 Vis information om contributors indlæg` (IN `XX` INT(11))  SELECT * 
+FROM content
+	INNER JOIN contributors 
+        	ON content.contributor_ID = contributors.contributor_ID
+WHERE content.contributor_ID = XX$$
 
 DELIMITER ;
 
@@ -76,6 +82,7 @@ DELIMITER ;
 -- Table structure for table `category`
 --
 
+DROP TABLE IF EXISTS `category`;
 CREATE TABLE IF NOT EXISTS `category` (
   `category_name` varchar(25) NOT NULL,
   `category_ID` int(11) NOT NULL AUTO_INCREMENT,
@@ -102,6 +109,7 @@ INSERT INTO `category` (`category_name`, `category_ID`, `subcategory_ID`) VALUES
 -- Table structure for table `content`
 --
 
+DROP TABLE IF EXISTS `content`;
 CREATE TABLE IF NOT EXISTS `content` (
   `contributor_ID` int(11) NOT NULL,
   `content_ID` int(11) NOT NULL AUTO_INCREMENT,
@@ -134,6 +142,7 @@ INSERT INTO `content` (`contributor_ID`, `content_ID`, `category_ID`, `product_I
 -- Table structure for table `contributors`
 --
 
+DROP TABLE IF EXISTS `contributors`;
 CREATE TABLE IF NOT EXISTS `contributors` (
   `contributor_ID` int(11) NOT NULL AUTO_INCREMENT,
   `contributor_name` varchar(25) NOT NULL,
@@ -160,6 +169,7 @@ INSERT INTO `contributors` (`contributor_ID`, `contributor_name`, `contributor_e
 -- Table structure for table `product`
 --
 
+DROP TABLE IF EXISTS `product`;
 CREATE TABLE IF NOT EXISTS `product` (
   `product_name` varchar(30) NOT NULL,
   `product_ID` int(11) NOT NULL AUTO_INCREMENT,
@@ -184,6 +194,7 @@ INSERT INTO `product` (`product_name`, `product_ID`) VALUES
 -- Table structure for table `subcategory`
 --
 
+DROP TABLE IF EXISTS `subcategory`;
 CREATE TABLE IF NOT EXISTS `subcategory` (
   `subcategory_name` varchar(25) NOT NULL,
   `subcategory_ID` int(11) NOT NULL AUTO_INCREMENT,
